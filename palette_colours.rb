@@ -11,6 +11,8 @@ exclude 'http://', 'https://'
 
 blacklist 'mean_user, private_user'
 
+use_streaming true
+
 replies do |tweet|
   next if tweet.media.empty?
   # replace the incoming username with #USER#, which will be replaced
