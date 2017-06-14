@@ -1,3 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'chatterbot', '2.0.3'
+gem 'chatterbot', git: 'https://github.com/davidenglishmusic/chatterbot.git'
+gem 'rmagick'
