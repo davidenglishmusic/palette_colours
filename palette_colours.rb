@@ -2,6 +2,7 @@ require 'chatterbot/dsl'
 require 'rmagick'
 include Magick
 require 'open-uri'
+require_relative 'colour'
 
 DIVISOR = 256
 HEX_FACTOR = 16
@@ -23,17 +24,41 @@ use_streaming true
 
 replies do |tweet|
   next if tweet.media.empty?
-  # replace the incoming username with #USER#, which will be replaced
-  # with the handle of the user who tweeted us by the
-  # replace_variables helper
   photo = tweet.media.first
   next unless photo.is_a? Twitter::Media::Photo
   image = Magick::ImageList.new
   image_download = open(photo.media_url_https.to_s)
   image.from_blob(image_download.read)
-  top_colors = image.color_histogram.sort_by { |_k, v| v }.reverse.first(COLOR_LIMIT).map do |tuple|
-    pixel = tuple.first
-    "#{(pixel.red / DIVISOR).to_s(HEX_FACTOR)}#{(pixel.green / DIVISOR).to_s(HEX_FACTOR)}#{(pixel.blue / DIVISOR).to_s(HEX_FACTOR)}"
+
+  unsorted_colours = []
+  image.quantize(COLOR_LIMIT, RGBColorspace).color_histogram.each do |key, _count|
+    colour = Colour.new(key)
+    unsorted_colours.push(colour)
   end
-  reply "@#{tweet.user.screen_name} Hex codes: #{top_colors.join(', ')}", tweet
+
+  sorted_colours = unsorted_colours.sort { |a, b| a.luminosity <=> b.luminosity }.reverse
+
+  palette_image = Magick::ImageList.new
+  palette_image.new_image(1000, 50)
+
+  width_increment = 1000 / sorted_colours.count
+
+  top_left = 0
+  top_right = top_left + width_increment
+
+  sorted_colours.each do |colour|
+    rect = Magick::Draw.new
+    rect.fill(colour.rgb)
+    rect.rectangle(top_left, 0, top_right, 50)
+    rect.draw(palette_image)
+    top_left += width_increment
+    top_right += width_increment
+  end
+
+  palette = sorted_colours.map(&:hex)
+
+  palette_image.write('palette.png')
+  media = File.open('palette.png')
+
+  tweet "@#{tweet.user.screen_name} Hex codes: #{palette.join(', ')}", { media: media }, tweet
 end
