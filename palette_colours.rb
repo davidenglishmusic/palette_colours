@@ -7,6 +7,8 @@ require_relative 'colour'
 DIVISOR = 256
 HEX_FACTOR = 16
 COLOR_LIMIT = 10
+IMAGE_HEIGHT = 50
+IMAGE_WIDTH = 100
 
 File.open('palette_colours.yml', 'w') do |f|
   f << "---\n"
@@ -39,9 +41,9 @@ replies do |tweet|
   sorted_colours = unsorted_colours.sort { |a, b| a.luminosity <=> b.luminosity }.reverse
 
   palette_image = Magick::ImageList.new
-  palette_image.new_image(1000, 50)
+  palette_image.new_image(IMAGE_WIDTH, IMAGE_HEIGHT)
 
-  width_increment = 1000 / sorted_colours.count
+  width_increment = IMAGE_WIDTH / sorted_colours.count
 
   top_left = 0
   top_right = top_left + width_increment
@@ -49,7 +51,7 @@ replies do |tweet|
   sorted_colours.each do |colour|
     rect = Magick::Draw.new
     rect.fill(colour.rgb)
-    rect.rectangle(top_left, 0, top_right, 50)
+    rect.rectangle(top_left, 0, top_right, IMAGE_HEIGHT)
     rect.draw(palette_image)
     top_left += width_increment
     top_right += width_increment
