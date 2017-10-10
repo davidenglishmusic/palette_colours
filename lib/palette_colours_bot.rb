@@ -9,7 +9,7 @@ class PaletteColoursBot
   HEX_FACTOR = 16
   COLOR_LIMIT = 10
   IMAGE_HEIGHT = 50
-  IMAGE_WIDTH = 100
+  IMAGE_WIDTH = 1000
 
   def run
     exclude 'http://', 'https://'
